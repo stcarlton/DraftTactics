@@ -1,0 +1,17 @@
+# Roblox place files
+*.rbxl
+*.rbxlx
+
+# Roblox Studio lock files
+*.rbxl.lock
+*.rbxlx.lock
+
+# Rojo build artifacts
+*.project.json.lock
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# VS Code settings (optional, personal preference)
+.vscode/
