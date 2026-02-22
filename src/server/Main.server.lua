@@ -1,7 +1,6 @@
 -- Main.server.lua
 --
 -- Entry point for the server-side simulation.
---
 -- Responsibilities:
 --   • Boot the battlefield
 --   • Spawn & initialize units
