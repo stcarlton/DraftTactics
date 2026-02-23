@@ -1,16 +1,33 @@
--- StatResolver.lua
---
--- Pure combat rules engine.
--- No AI logic.
--- No animation control.
--- No state orchestration.
---
--- Responsible only for:
---   • Gathering modifiers
---   • Applying stat changes
---   • Applying RNG variance
---   • Applying damage
---   • Returning structured result
+--[[
+StatResolver.lua
+
+Role:
+- Pure combat math engine.
+- Resolves damage and final stat values.
+- Applies ModifierStack to base stats.
+
+Owns:
+- Damage calculation.
+- Stat aggregation logic.
+- Modifier application order.
+
+Does NOT:
+- Mutate unit runtime state.
+- Trigger animations or effects.
+- Decide targeting.
+- Manage cooldowns or ammo.
+
+Invariants:
+- Pure functions only.
+- No side effects.
+- Deterministic for identical inputs.
+- Modifier order must remain stable.
+
+Collaborators:
+- ModifierStack
+- UnitModifiers
+- UnitRuntime (caller only)
+]]
 
 local ModifierStack = require(script.Parent.ModifierStack)
 local UnitModifiers = require(script.Parent.UnitModifiers)

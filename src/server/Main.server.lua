@@ -1,13 +1,35 @@
--- Main.server.lua
---
--- Entry point for the server-side simulation.
--- Responsibilities:
---   • Boot the battlefield
---   • Spawn & initialize units
---   • Tick the simulation
---   • Run perception + AI + victory checks
---
--- This file is the ONLY place that touches RunService.
+--[[
+Main.server.lua
+
+Role:
+- Entry point for server simulation.
+- Initializes core services.
+- Connects RunService to battle update loop.
+
+Owns:
+- Service boot order.
+- Simulation tick binding.
+- High-level phase progression.
+
+Does NOT:
+- Contain game logic.
+- Execute per-unit behavior.
+- Compute combat results.
+- Build battlefield geometry.
+- Make tactical decisions.
+
+Invariants:
+- Thin orchestration layer only.
+- No business logic.
+- Deterministic update order.
+- Services are initialized once.
+
+Collaborators:
+- BattleService
+- BattlefieldService
+- GamePhase
+- RunService
+]]
 
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")

@@ -1,4 +1,29 @@
--- FireController.lua
+--[[
+FireController.lua
+
+Role:
+- Executes ranged attacks.
+- Handles fire cadence and shot timing.
+
+Owns:
+- Fire cooldown tracking.
+- Shot validation.
+- Visual shot effects trigger.
+
+Does NOT:
+- Choose targets (Brain).
+- Decide intent (UnitRuntime).
+- Compute damage math (StatResolver).
+- Move the character.
+
+Rules:
+- Damage applied only via StatResolver.
+- Deterministic timing.
+- No direct mutation of other unit state.
+
+Used By:
+- UnitRuntime
+]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 

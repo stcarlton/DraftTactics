@@ -1,20 +1,38 @@
--- BattleService.lua
---
--- Runtime combat orchestrator.
---
--- RESPONSIBILITIES:
---   • Spawn units
---   • Bind battlefield objects to runtime
---   • Tick combat simulation
---   • Resolve battle end conditions
---
--- NON-RESPONSIBILITIES:
---   • Building battlefield geometry
---   • Spawning objectives or towers
---   • PreBattle visuals
---
--- ASSUMPTION:
---   BattlefieldService has already been built.
+--[[
+BattleService.lua
+
+Role:
+- Orchestrates a single battle instance.
+- Controls battle lifecycle + state transitions.
+- Spawns units from deployment snapshot.
+- Evaluates victory conditions.
+
+Owns:
+- Active unit list.
+- BattleState.
+- Simulation start/stop.
+- Win/loss resolution.
+
+Does NOT:
+- Execute per-unit logic (UnitRuntime).
+- Decide tactics (Brains).
+- Compute damage (StatResolver).
+- Move characters (MovementController).
+- Build battlefield geometry (BattlefieldService).
+
+Invariants:
+- Server-authoritative.
+- Single active battle (MVP).
+- Deterministic update order.
+- Explicit enum-driven state transitions.
+
+Collaborators:
+- SpawnPlanBuilder
+- UnitRegistry
+- UnitRuntime
+- BattlefieldService
+- GamePhase
+]]
 
 local ServerStorage = game:GetService("ServerStorage")
 local Workspace = game:GetService("Workspace")

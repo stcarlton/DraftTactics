@@ -1,38 +1,34 @@
--- UnitRuntime.lua
---
--- Runtime execution container for a single unit instance.
---
--- RESPONSIBILITIES:
---   • Own all mutable per-unit state (health, ammo, cooldowns, phases)
---   • Execute intent determined by the Brain (movement, firing, reload)
---   • Drive animation playback and animation sequencing
---   • Own reload state machine and fire cadence
---   • Own perception results and current combat target
---   • Handle damage, death, ragdoll, and cleanup
---
--- NOT RESPONSIBLE FOR:
---   • Tactical decision-making (handled by InfantryBrain)
---   • Cover selection or battlefield reasoning
---   • High-level behavior planning
---   • Spatial heuristics or geometry queries
---
--- ARCHITECTURAL RULES:
---   • UnitRuntime NEVER directly writes to Root.CFrame
---   • All movement and facing is delegated to MovementController
---   • Animation behavior is controlled in code, not asset metadata
---   • Intent, BehaviorPhase, and ReloadPhase are mutually exclusive enums
---
--- EXECUTION MODEL:
---   • Brain.Update() determines BehaviorPhase, Intent, Target, Facing
---   • UnitRuntime.Update() executes those intents deterministically
---   • Reload sequences are blocking and complete once started
---   • Fire cadence is gated by cooldown + animation state
---
--- DESIGN GOALS:
---   • Deterministic behavior
---   • Explicit state transitions
---   • No hidden engine side effects
---   • Clear separation between “decide” and “do”
+--[[
+UnitRuntime.lua
+
+Role:
+- Owns mutable per-unit runtime state.
+- Executes Brain intent.
+- Drives animation + action state.
+
+Owns:
+- Health, cooldowns, ammo.
+- ResolvedStats (per-frame).
+- Current Intent + targets.
+
+Does NOT:
+- Decide strategy (Brain).
+- Move character directly (MovementController).
+- Compute damage math (StatResolver).
+- Coordinate other units.
+
+Invariants:
+- Stats resolved once per frame.
+- Only mutates its own state.
+- Damage applied only via StatResolver.
+- Update order must remain deterministic.
+
+Collaborators:
+- Brain
+- MovementController
+- FireController
+- StatResolver
+]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 

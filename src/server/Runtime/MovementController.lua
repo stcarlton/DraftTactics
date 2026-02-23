@@ -1,37 +1,33 @@
--- MovementController.lua
---
--- Centralized movement and facing executor for all units.
---
--- RESPONSIBILITIES:
---   • Perform all positional movement for units
---   • Perform all facing / rotation updates
---   • Apply soft avoidance
---   • Resolve final Root.CFrame writes
---
--- NOT RESPONSIBLE FOR:
---   • Deciding where units should go
---   • Tactical or combat decisions
---   • Animation state management
---   • Cooldowns, reloads, or firing logic
---
--- ARCHITECTURAL RULES (CRITICAL):
---   • This is the ONLY module allowed to write Root.CFrame
---   • UnitRuntime and Brain must NEVER manipulate unit transforms directly
---   • Movement is deterministic and frame-rate independent
---   • Visual effects (recoil, animation offsets) must not affect logic
---
--- INPUT CONTRACT:
---   • unit.MoveDestination (world position)
---   • unit.Facing (desired look direction)
---   • unit.Config.MoveSpeed
---
--- OUTPUT:
---   • Updated Root.CFrame
---
--- DESIGN GOALS:
---   • Single source of truth for spatial movement
---   • Predictable, debuggable motion
---   • Easy future extension (retreat, knockback, suppression effects)
+--[[
+MovementController.lua
+
+Role:
+- Executes all character locomotion.
+- Applies movement and facing.
+- Only file allowed to write Root.CFrame.
+
+Owns:
+- Position interpolation.
+- Rotation / facing alignment.
+- Movement speed application.
+
+Does NOT:
+- Decide destinations (Brain).
+- Own intent (UnitRuntime).
+- Perform pathfinding.
+- Modify stats.
+- Apply damage.
+
+Invariants:
+- Sole authority over Root.CFrame.
+- No physics-driven locomotion.
+- Deterministic movement per frame.
+- Must not fight animation system.
+
+Collaborators:
+- UnitRuntime (provides intent + destination)
+- Brain (indirectly, via runtime)
+]]
 
 local BattlefieldCover = require(script.Parent.BattlefieldCover)
 

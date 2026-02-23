@@ -1,4 +1,5 @@
---DraftDefinitions.lua
+-- DraftDefinitions.lua
+-- Defines unit spawn counts and draft-related configuration.
 
 local Class = require(game.ReplicatedStorage.Shared.Types.Class)
 

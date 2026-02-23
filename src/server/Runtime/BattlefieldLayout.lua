@@ -1,23 +1,30 @@
--- BattlefieldLayout.lua
---
--- Authoritative battlefield layout definition (MVP).
---
--- RESPONSIBILITIES:
---   • Define fixed tower positions per team
---   • Define tower semantics (slots, climb positions)
---   • Provide deterministic structure for defensive deployment
---
--- NON-RESPONSIBILITIES:
---   • Spawning models
---   • Cover logic
---   • AI decisions
---   • Movement or animation
---   • Randomness
---
--- DESIGN INVARIANT:
---   Towers are NOT cover.
---   They are sealed defensive emplacements entered by deployment,
---   not discovered or evaluated by AI.
+--[[
+BattlefieldLayout.lua
+
+Role:
+- Defines static battlefield structure.
+- Provides tower/objective placement data.
+
+Owns:
+- Layout coordinates.
+- Slot offsets.
+- Structural constants.
+
+Does NOT:
+- Spawn instances.
+- Manage runtime state.
+- Apply damage.
+- Make tactical decisions.
+
+Rules:
+- Pure data + layout helpers only.
+- No side effects.
+- Deterministic output.
+
+Collaborators:
+- BattlefieldService
+- ObjectiveRuntime
+]]
 
 local GridUtil = require(game.ReplicatedStorage.Shared.Util.GridUtil)
 

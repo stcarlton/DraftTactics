@@ -1,4 +1,5 @@
---UnitRegistry.lua
+-- UnitRegistry.lua
+-- Maps unit Class → Config, Brain, and Model.
 
 local InfantryBrain = require(game.ServerScriptService.Server.Runtime.InfantryBrain)
 local SniperBrain = require(game.ServerScriptService.Server.Runtime.SniperBrain)

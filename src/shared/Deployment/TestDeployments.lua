@@ -1,15 +1,10 @@
 -- TestDeployments.lua
--- Static team deployment templates for MVP testing.
--- Returns immutable templates and provides a safe Get() clone method.
+-- Static deployment layouts for development and testing.
 
 local Class = require(game.ReplicatedStorage.Shared.Types.Class)
 local DeploymentTile = require(game.ReplicatedStorage.Shared.Deployment.DeploymentTile)
 
 local TestDeployments = {}
-
----------------------------------------------------------------------
--- Internal Helper
----------------------------------------------------------------------
 
 local function Tile(id, class, row, col)
 	local tile = DeploymentTile.new(id, class)
@@ -18,10 +13,6 @@ local function Tile(id, class, row, col)
 	tile.Col = col
 	return tile
 end
-
----------------------------------------------------------------------
--- Deployment Templates
----------------------------------------------------------------------
 
 TestDeployments.Blitz = {
 	Tile("inf_1", Class.Infantry, 1, 1),

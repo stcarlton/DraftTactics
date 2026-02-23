@@ -1,4 +1,5 @@
 -- UnitConfigs.lua
+-- Static archetype stats for each unit class.
 
 local Class = require(game.ReplicatedStorage.Shared.Types.Class)
 

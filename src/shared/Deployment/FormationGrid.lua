@@ -1,4 +1,28 @@
--- FormationGrid.lua
+--[[
+FormationGrid.lua
+
+Role:
+- Container for 6×6 deployment grid.
+- Stores tile placement state.
+
+Owns:
+- Grid slots.
+- Tile insertion/removal.
+- Snapshot generation.
+
+Does NOT:
+- Spawn units.
+- Validate battle rules.
+- Execute gameplay logic.
+
+Rules:
+- No side effects outside grid state.
+- Deterministic snapshot output.
+
+Used By:
+- PreBattleUI
+- SpawnPlanBuilder
+]]
 
 local FormationSlot = require(script.Parent.FormationSlot)
 local GridUtil = require(script.Parent.Parent.Util.GridUtil)

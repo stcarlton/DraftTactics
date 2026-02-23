@@ -1,37 +1,30 @@
--- InfantryBrain.lua
---
--- Stateless tactical decision module for infantry units.
---
--- RESPONSIBILITIES:
---   • Observe current UnitRuntime state and perception results
---   • Resolve the unit’s current BehaviorPhase
---   • Determine high-level Intent (Move / Fire / Reload / None)
---   • Select targets, destinations, and desired facing
---
--- NOT RESPONSIBLE FOR:
---   • Movement execution
---   • Animation playback or sequencing
---   • Firing, reload timing, or ammo manipulation
---   • Cooldowns, health, or death handling
---
--- ARCHITECTURAL RULES:
---   • InfantryBrain must be side-effect free
---   • No CFrame writes or transform manipulation
---   • No animation calls
---   • No timers or long-lived state
---
--- OUTPUT CONTRACT:
---   Brain.Update(unit, dt) may set:
---     • unit.Decision
---     • unit.Intent
---     • unit.Target / unit.MoveDestination
---
--- All outputs are advisory; execution is owned by UnitRuntime.
---
--- DESIGN GOALS:
---   • Readable, testable tactical logic
---   • Deterministic decisions given the same inputs
---   • Easy extension for new unit archetypes (snipers, commandos)
+--[[
+InfantryBrain.lua
+
+Role:
+- Stateless decision logic for Infantry.
+- Selects Decision + Intent.
+- Chooses targets and cover requests.
+
+Owns:
+- Tactical evaluation.
+- Behavior phase transitions.
+
+Does NOT:
+- Execute movement or firing.
+- Modify runtime state.
+- Apply damage.
+- Reserve cover directly.
+
+Invariants:
+- Pure logic; no side effects.
+- Deterministic for identical inputs.
+- No global state access.
+
+Collaborators:
+- UnitRuntime (provides perception + state)
+- BattlefieldCover (cover scoring)
+]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 

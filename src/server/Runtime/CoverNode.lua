@@ -1,16 +1,22 @@
--- CoverNode.lua
---
--- A CoverNode represents a discrete tactical position on the battlefield.
--- Units must occupy a CoverNode in order to fire.
---
--- IMPORTANT INVARIANTS:
--- - Infantry cannot fire unless occupying a CoverNode
--- - Cover provides protection only in the forward-facing 180° arc
--- - If flanked (attacker behind forward arc), cover provides NO benefit
--- - CoverNodes are authored; no runtime generation in MVP
---
--- This module defines the data contract only.
--- No behavior, queries, or AI logic live here.
+--[[
+BrainActions.lua
+
+Role:
+- Shared helper functions for Brains.
+
+Does NOT:
+- Execute actions.
+- Modify runtime state.
+- Store persistent state.
+
+Rules:
+- Pure logic only.
+- No side effects.
+
+Used By:
+- InfantryBrain
+- SniperBrain
+]]
 
 local CoverNode = {}
 CoverNode.__index = CoverNode

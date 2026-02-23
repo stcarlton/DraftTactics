@@ -1,4 +1,5 @@
 -- DeploymentTile.lua
+-- Data container for a single pre-battle deployment tile.
 
 local DeploymentTile = {}
 DeploymentTile.__index = DeploymentTile

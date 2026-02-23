@@ -1,4 +1,28 @@
--- ModifierStack.lua
+--[[
+ModifierStack.lua
+
+Role:
+- Aggregates and applies stat modifiers.
+- Defines modifier application order.
+
+Owns:
+- Modifier evaluation pipeline.
+- Stable operation ordering (Add/Mul/Set/etc).
+
+Does NOT:
+- Store global state.
+- Mutate units directly.
+- Trigger gameplay effects.
+
+Rules:
+- Pure functions only.
+- Deterministic ordering.
+- No side effects.
+
+Used By:
+- StatResolver
+- UnitModifiers
+]]
 
 local StatOp = require(script.Parent.StatOp)
 

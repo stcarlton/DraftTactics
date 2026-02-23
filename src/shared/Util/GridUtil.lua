@@ -1,4 +1,27 @@
--- GridUtil.lua
+--[[
+GridUtil.lua
+
+Role:
+- Grid ↔ world coordinate conversions.
+
+Owns:
+- Position mapping logic.
+- Grid math helpers.
+
+Does NOT:
+- Store state.
+- Access runtime systems.
+- Apply gameplay logic.
+
+Rules:
+- Pure functions only.
+- No side effects.
+- Deterministic output.
+
+Used By:
+- PreBattleUI
+- Deployment systems
+]]
 
 local GridUtil = {}
 

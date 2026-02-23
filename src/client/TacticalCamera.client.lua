@@ -1,4 +1,19 @@
--- TacticalCamera.client.lua
+--[[
+TacticalCamera.client.lua
+
+Role:
+- Controls the spectator camera during a match.
+- Positions and orients the camera based on GamePhase.
+
+Invariants:
+- Client-side presentation only.
+- Must not modify gameplay state.
+- Deterministic for a given GamePhase.
+- No per-frame randomness or unit-specific logic.
+
+Collaborators:
+- Reads replicated GamePhase value.
+]]
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")

@@ -1,4 +1,5 @@
 -- Helpers.lua
+-- General math and utility helper functions.
 
 local Helpers = {}
 

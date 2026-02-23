@@ -1,14 +1,35 @@
--- BattlefieldCover.lua
---
--- Authoritative tactical map representation.
---
--- This module defines:
---   • All cover nodes on the battlefield
---   • How good each node is for a given unit
---   • Flanking, protection, and pressure rules
---   • Occupancy & reservation logic
---
--- AI brains query this module but never re-implement geometry or cover rules.
+--[[
+BattlefieldCover.lua
+
+Role:
+- Authoritative cover system.
+- Owns CoverNode graph.
+- Scores and reserves cover positions.
+
+Owns:
+- CoverNode registration.
+- Cover availability + slot tracking.
+- Flanking validation.
+- Cover scoring logic.
+
+Does NOT:
+- Decide strategy (Brain).
+- Move units.
+- Apply damage.
+- Modify unit runtime state directly.
+
+Invariants:
+- Cover blocks damage only within forward 180° arc.
+- Flanking negates cover.
+- Slot reservations must be deterministic.
+- No hidden state outside this module.
+
+Collaborators:
+- CoverNode
+- UnitRuntime (for position queries)
+- Brain (requests best cover)
+- StatResolver (cover damage checks)
+]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 

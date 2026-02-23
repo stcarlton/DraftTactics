@@ -1,17 +1,30 @@
--- BattlefieldService.lua
---
--- Phase-agnostic battlefield construction.
---
--- RESPONSIBILITIES:
---   • Build objectives (static, visible in PreBattle)
---   • Build battlefield layouts (towers, slots)
---   • Spawn tower models
---
--- NON-RESPONSIBILITIES:
---   • Spawning units
---   • Running simulation
---   • Combat logic
---   • Phase transitions
+--[[
+BattlefieldService.lua
+
+Role:
+- Builds and initializes battlefield structures.
+- Spawns objectives and static elements.
+
+Owns:
+- Map construction.
+- Objective instantiation.
+- Static geometry setup.
+
+Does NOT:
+- Run battle simulation.
+- Execute unit logic.
+- Apply damage.
+- Evaluate victory.
+
+Rules:
+- Server-only.
+- No per-frame logic.
+- Deterministic setup.
+
+Used By:
+- Main.server.lua
+- BattleService
+]]
 
 local ServerStorage = game:GetService("ServerStorage")
 local Workspace = game:GetService("Workspace")

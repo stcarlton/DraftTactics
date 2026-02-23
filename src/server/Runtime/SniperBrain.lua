@@ -1,37 +1,30 @@
--- SniperBrain.lua
---
--- Stateless tactical decision module for infantry units.
---
--- RESPONSIBILITIES:
---   • Observe current UnitRuntime state and perception results
---   • Resolve the unit’s current BehaviorPhase
---   • Determine high-level Intent (Move / Fire / Reload / None)
---   • Select targets, destinations, and desired facing
---
--- NOT RESPONSIBLE FOR:
---   • Movement execution
---   • Animation playback or sequencing
---   • Firing, reload timing, or ammo manipulation
---   • Cooldowns, health, or death handling
---
--- ARCHITECTURAL RULES:
---   • SniperBrain must be side-effect free
---   • No CFrame writes or transform manipulation
---   • No animation calls
---   • No timers or long-lived state
---
--- OUTPUT CONTRACT:
---   Brain.Update(unit, dt) may set:
---     • unit.Decision
---     • unit.Intent
---     • unit.Target / unit.MoveDestination
---
--- All outputs are advisory; execution is owned by UnitRuntime.
---
--- DESIGN GOALS:
---   • Readable, testable tactical logic
---   • Deterministic decisions given the same inputs
---   • Easy extension for new unit archetypes (snipers, commandos)
+--[[
+SniperBrain.lua
+
+Role:
+- Stateless decision logic for Sniper.
+- Selects high-value targets.
+- Manages aim timing + engagement choice.
+
+Owns:
+- Target prioritization.
+- Engagement timing decisions.
+
+Does NOT:
+- Execute firing.
+- Move the character.
+- Apply damage.
+- Modify other units.
+
+Invariants:
+- Pure decision layer.
+- Deterministic for identical inputs.
+- No persistent state.
+
+Collaborators:
+- UnitRuntime (state + perception)
+- BattlefieldCover (position evaluation)
+]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 

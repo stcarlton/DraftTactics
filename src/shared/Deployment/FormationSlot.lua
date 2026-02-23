@@ -1,4 +1,5 @@
 -- FormationSlot.lua
+-- Data container for a single cell in the deployment grid.
 
 local FormationSlot = {}
 FormationSlot.__index = FormationSlot

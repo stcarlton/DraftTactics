@@ -1,4 +1,29 @@
---UnitModifiers.lua
+--[[
+UnitModifiers.lua
+
+Role:
+- Provides unit-specific modifier definitions.
+- Supplies active modifiers to ModifierStack.
+
+Owns:
+- Modifier lookup for a unit.
+- Static + runtime modifier collection.
+
+Does NOT:
+- Apply damage.
+- Execute gameplay logic.
+- Store global state.
+- Mutate other units.
+
+Rules:
+- No side effects.
+- Deterministic modifier output.
+- Logic limited to modifier composition.
+
+Used By:
+- StatResolver
+- ModifierStack
+]]
 
 local Strategy = require(game.ReplicatedStorage.Shared.Types.Strategy)
 local StatOp = require(script.Parent.StatOp)

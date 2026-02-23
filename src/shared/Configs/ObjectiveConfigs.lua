@@ -1,4 +1,5 @@
---ObjectiveConfigs.lua
+-- ObjectiveConfigs.lua
+-- Static configuration for objective stats and placement.
 
 local ObjectiveConfigs = {}
 

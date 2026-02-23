@@ -1,4 +1,29 @@
--- SpawnPlanBuilder.lua
+--[[
+SpawnPlanBuilder.lua
+
+Role:
+- Converts deployment tiles into spawn entries.
+- Determines spawn timing and ordering.
+
+Owns:
+- Spawn sequence generation.
+- Row-based timing offsets.
+- Deterministic ordering rules.
+
+Does NOT:
+- Spawn units directly.
+- Modify runtime state.
+- Decide tactics.
+- Access live unit data.
+
+Rules:
+- Pure transformation.
+- Deterministic output for identical input.
+- No side effects.
+
+Used By:
+- BattleService
+]]
 
 local SpawnPlanBuilder = {}
 

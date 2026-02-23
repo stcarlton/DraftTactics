@@ -1,12 +1,34 @@
--- PreBattleUI.client.lua
---
--- Client-side pre-battle deployment interface.
---
--- AUTHORITATIVE RULES:
--- • Grid is world-aligned and ALWAYS centered
--- • Side panels must NEVER affect grid positioning
--- • UI re-renders exclusively from server state
--- • No implicit layout coupling
+--[[
+PreBattleUI.client.lua
+
+Role:
+- Client-side deployment UI.
+- Handles tile drag/drop.
+- Renders 6×6 formation grid.
+
+Owns:
+- Visual grid state.
+- Ghost tile rendering.
+- Input handling for placement.
+- Server sync requests.
+
+Does NOT:
+- Spawn units.
+- Validate final authority state.
+- Decide battle logic.
+- Persist game state.
+
+Invariants:
+- Server is authoritative.
+- UI always re-renders from server truth.
+- No accumulated event connections.
+- Grid remains world-aligned and centered.
+
+Collaborators:
+- FormationGrid (data snapshot)
+- GamePhase (phase switching)
+- Server deployment endpoint
+]]
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")

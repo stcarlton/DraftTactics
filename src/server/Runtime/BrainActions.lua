@@ -1,4 +1,22 @@
---BrainActions.lua
+--[[
+BrainActions.lua
+
+Role:
+- Shared helper functions for Brains.
+
+Does NOT:
+- Execute actions.
+- Modify runtime state.
+- Store persistent state.
+
+Rules:
+- Pure logic only.
+- No side effects.
+
+Used By:
+- InfantryBrain
+- SniperBrain
+]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 

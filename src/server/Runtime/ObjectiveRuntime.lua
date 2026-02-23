@@ -1,13 +1,28 @@
--- ObjectiveRuntime.lua
---
--- Runtime container for battlefield objectives.
--- Objectives are static, damageable entities that can be targeted by units.
---
--- Responsibilities:
--- • Own health + alive state
--- • Expose Root position for targeting
--- • Handle damage + destruction
--- • Signal battle end on death
+--[[
+ObjectiveRuntime.lua
+
+Role:
+- Runtime container for an objective entity.
+- Tracks health and destruction state.
+
+Owns:
+- Current health.
+- Alive/destroyed flag.
+
+Does NOT:
+- Decide targeting.
+- Apply damage math.
+- Control battle flow.
+
+Rules:
+- Damage applied via StatResolver only.
+- No global state mutation.
+- Deterministic state transitions.
+
+Used By:
+- BattleService
+- StatResolver
+]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 

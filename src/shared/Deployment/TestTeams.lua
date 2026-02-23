@@ -1,4 +1,5 @@
 -- TestTeams.lua
+-- Static test team roster definitions for development.
 
 local Class = require(game.ReplicatedStorage.Shared.Types.Class)
 
