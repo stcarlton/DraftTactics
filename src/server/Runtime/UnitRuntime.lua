@@ -208,9 +208,7 @@ function UnitRuntime:UpdateAnimations(dt)
 end
 
 function UnitRuntime:TickFire(dt)
-	if self.Intent == Intent.Fire then
-		self.FireController:Tick(self, dt)
-	end
+	self.FireController:Tick(self, dt)
 end
 
 function UnitRuntime:TickMovement(dt)
@@ -446,6 +444,10 @@ function UnitRuntime:Die()
 	
 	if DebugState then
 		self._DebugLabel.Text = ""
+	end
+
+	if self.FireController and self.FireController.OnUnitDied then
+		self.FireController:OnUnitDied(self)
 	end
 
 	self:DropWeapon()

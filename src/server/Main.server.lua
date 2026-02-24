@@ -77,12 +77,12 @@ TeamA.Formation = FormationGrid.new()
 local SKIP_PREBATTLE_UI = true
 
 if SKIP_PREBATTLE_UI then
-	TeamA.Tiles = TestDeployments.Stalk                          
+	TeamA.Tiles = TestDeployments.Defend                          
 else
 	TeamA.Units = TestTeams.Balanced
 end
 
-TeamB.Tiles = TestDeployments.Stalk
+TeamB.Tiles = TestDeployments.Blitz
 
 local Remotes = ReplicatedStorage:WaitForChild("Remotes")
 local StartBattle = Remotes:WaitForChild("StartBattle")

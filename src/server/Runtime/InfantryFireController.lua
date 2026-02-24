@@ -7,11 +7,16 @@ Role:
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Intent = require(ReplicatedStorage.Shared.Types.Intent)
 local StatResolver = require(ReplicatedStorage.Shared.Combat.StatResolver)
 
 local InfantryFireController = {}
 
 function InfantryFireController:Tick(unit, dt)
+	if unit.Intent ~= Intent.Fire then
+		return
+	end
+
 	unit.FireCooldown -= dt
 	if unit.FireCooldown <= 0 then
 		self:Fire(unit)
