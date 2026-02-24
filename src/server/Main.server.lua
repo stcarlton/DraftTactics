@@ -74,10 +74,10 @@ local TeamB = TeamConfig.new("B", "Enemy_001", "Balanced")
 TeamA.Formation = FormationGrid.new()
 
 -- DEV / MODE SWITCH
-local SKIP_PREBATTLE_UI = false
+local SKIP_PREBATTLE_UI = true
 
 if SKIP_PREBATTLE_UI then
-	TeamA.Tiles = TestDeployments.Defend                          
+	TeamA.Tiles = TestDeployments.Stalk                          
 else
 	TeamA.Units = TestTeams.Balanced
 end

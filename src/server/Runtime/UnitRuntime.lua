@@ -33,7 +33,6 @@ Collaborators:
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Intent = require(ReplicatedStorage.Shared.Types.Intent)
-local ReloadPhase = require(ReplicatedStorage.Shared.Types.ReloadPhase)
 local TowerPhase = require(ReplicatedStorage.Shared.Types.TowerPhase)
 local Decision = require(ReplicatedStorage.Shared.Types.Decision)
 local StatResolver = require(ReplicatedStorage.Shared.Combat.StatResolver)
@@ -41,7 +40,6 @@ local Helpers = require(ReplicatedStorage.Shared.Util.Helpers)
 
 local BattlefieldCover = require(script.Parent.BattlefieldCover)
 local MovementController = require(script.Parent.MovementController)
-local FireController = require(script.Parent.FireController)
 
 local UnitRuntime = {}
 UnitRuntime.__index = UnitRuntime
@@ -51,7 +49,10 @@ local DebugState = game.ReplicatedStorage
 	:WaitForChild("DebugStateValue")
 	.Value
 
-function UnitRuntime.new(id, model, config, brain)
+local MELEE_TOTAL_TIME = 0.75
+local MELEE_STRIKE_TIME = 0.5
+
+function UnitRuntime.new(id, model, config, brain, fireController, animationController)
 	assert(id, "UnitRuntime.new: id is required")
 	assert(model, "UnitRuntime.new: model is required")
 	assert(config, "UnitRuntime.new: config is required")
@@ -67,6 +68,8 @@ function UnitRuntime.new(id, model, config, brain)
 	self.Root = model.PrimaryPart
 	self.Config = config
 	self.Brain = brain
+	self.FireController = fireController
+	self.AnimationController = animationController
 
 	self.Team = nil
 	self.AllUnits = nil
@@ -104,7 +107,21 @@ function UnitRuntime.new(id, model, config, brain)
 	self.AssignedCoverNode = nil
 	self.FireCooldown = 0
 	
-	self.ReloadPhase = ReloadPhase.None
+	self.IsReloading = false
+	self.ReloadTimer = 0
+	self.ReloadDuration = config.ReloadTime
+	self.IsMeleeing = false
+	self.MeleeTimer = 0
+	self.MeleeDidStrike = false
+	self.VisualEvents = {
+		Fired = false,
+		StartReload = false,
+		StartMelee = false,
+	}
+	self.VisualState = {
+		ReloadPlaybackSpeed = 1,
+		MeleePlaybackSpeed = 1,
+	}
 	self.TowerPhase = TowerPhase.None
 	
 	self.Animator = animator
@@ -112,23 +129,17 @@ function UnitRuntime.new(id, model, config, brain)
 		StandIdle = animator:LoadAnimation(model.Animations.StandIdle),
 		Run  = animator:LoadAnimation(model.Animations.Run),
 		Fire = animator:LoadAnimation(model.Animations.Fire),
-		CrouchEnter = animator:LoadAnimation(model.Animations.CrouchEnter),
-		CrouchIdle = animator:LoadAnimation(model.Animations.CrouchIdle),
-		CrouchExit = animator:LoadAnimation(model.Animations.CrouchExit),
-		CrouchReload = animator:LoadAnimation(model.Animations.CrouchReload),
+		Reload = animator:LoadAnimation(model.Animations.CrouchReload),
 		Melee = animator:LoadAnimation(model.Animations.Melee),
 		Climb = animator:LoadAnimation(model.Animations.Climb),
 	}
 	
 	self.Anims.Fire.Looped = false
-	self.Anims.CrouchReload.Looped = false
+	self.Anims.Reload.Looped = false
 
-	self.Anims.CrouchIdle.Priority		= Enum.AnimationPriority.Idle
 	self.Anims.Run.Priority       		= Enum.AnimationPriority.Movement
-	self.Anims.CrouchEnter.Priority		= Enum.AnimationPriority.Action
-	self.Anims.CrouchExit.Priority  	= Enum.AnimationPriority.Action
 	self.Anims.Fire.Priority        	= Enum.AnimationPriority.Action
-	self.Anims.CrouchReload.Priority	= Enum.AnimationPriority.Action
+	self.Anims.Reload.Priority			= Enum.AnimationPriority.Action
 	self.Anims.Melee.Priority        	= Enum.AnimationPriority.Action
 	self.Anims.Climb.Priority        	= Enum.AnimationPriority.Movement
 
@@ -164,7 +175,126 @@ end
 
 function UnitRuntime:Update(dt)
 	if not self.IsAlive then return end
-	
+	self:ResetVisualEvents()
+	self:UpdateDebugLabel(tostring(self.Decision))
+	self.ResolvedStats = StatResolver.GetUnitStats(self)
+	self.Brain.Update(self, dt)
+	self:UpdateControllers(dt)
+	self:UpdateAnimations(dt)
+end
+
+function UnitRuntime:ResetVisualEvents()
+	local events = self.VisualEvents
+	events.Fired = false
+	events.StartReload = false
+	events.StartMelee = false
+end
+
+function UnitRuntime:UpdateControllers(dt)
+	self:TickReload(dt)
+	if self.IsReloading then
+		return
+	end
+
+	self:TickMovement(dt)
+	self:TickFire(dt)
+	self:TickMelee(dt)
+	self:TickClimb(dt)
+	self:TickHold(dt)
+end
+
+function UnitRuntime:UpdateAnimations(dt)
+	self.AnimationController:Update(self, dt)
+end
+
+function UnitRuntime:TickFire(dt)
+	if self.Intent == Intent.Fire then
+		self.FireController:Tick(self, dt)
+	end
+end
+
+function UnitRuntime:TickMovement(dt)
+	if self.Intent == Intent.Move then
+		MovementController:MoveUnit(self, dt)
+	else
+		MovementController:Face(self)
+	end
+end
+
+function UnitRuntime:TickReload(dt)
+	if self.IsReloading then
+		self.ReloadTimer -= dt
+		if self.ReloadTimer <= 0 then
+			self.AmmoInMag = self.MagSize
+			self.IsReloading = false
+			self.ReloadTimer = 0
+		end
+		return
+	end
+
+	if self.Intent == Intent.Reload and not self.IsReloading then
+		local reloadTime = self.ReloadDuration
+		local trackLength = self.Anims.Reload.Length
+		local playbackSpeed = 2
+
+		if reloadTime and reloadTime > 0 and trackLength and trackLength > 0 then
+			playbackSpeed = trackLength / reloadTime
+		end
+
+		self.IsReloading = true
+		self.ReloadTimer = self.ReloadDuration
+		self.VisualState.ReloadPlaybackSpeed = playbackSpeed
+		self.VisualEvents.StartReload = true
+	end
+end
+
+function UnitRuntime:TickMelee(dt)
+	if self.IsMeleeing then
+		local previousTimer = self.MeleeTimer
+		self.MeleeTimer -= dt
+
+		if not self.MeleeDidStrike then
+			local previousElapsed = MELEE_TOTAL_TIME - previousTimer
+			local currentElapsed = MELEE_TOTAL_TIME - math.max(self.MeleeTimer, 0)
+			if previousElapsed < MELEE_STRIKE_TIME and currentElapsed >= MELEE_STRIKE_TIME then
+				self.MeleeDidStrike = true
+				self:Melee()
+			end
+		end
+
+		if self.MeleeTimer <= 0 then
+			self.IsMeleeing = false
+			self.MeleeTimer = 0
+		end
+	end
+
+	if self.Intent == Intent.Melee and not self.IsMeleeing then
+		local trackLength = self.Anims.Melee.Length
+		local playbackSpeed = 1
+
+		if trackLength and trackLength > 0 then
+			playbackSpeed = trackLength / MELEE_TOTAL_TIME
+		end
+
+		self.IsMeleeing = true
+		self.MeleeTimer = MELEE_TOTAL_TIME
+		self.MeleeDidStrike = false
+		self.VisualState.MeleePlaybackSpeed = playbackSpeed
+		self.VisualEvents.StartMelee = true
+	end
+end
+
+function UnitRuntime:TickClimb(dt)
+	if self.Intent == Intent.Climb then
+		MovementController:ClimbUnit(self, dt)
+	end
+end
+
+function UnitRuntime:TickHold(dt)
+	-- No controller-side work for Hold. AnimationController handles visuals.
+end
+
+function UnitRuntime:UpdateDebugLabel(text)
 	if DebugState and self._DebugLabel then
 		local colorBy = {
 			None           = Color3.fromRGB(180, 180, 180),
@@ -183,103 +313,12 @@ function UnitRuntime:Update(dt)
 
 
 		--local text = tostring(self.Stealth)
-		local text = tostring(self.Decision)
+		-- local text = 
 		--local text = tostring(self.Intent)
 		--local text = tostring(self.ResolvedStats.MoveSpeed)
 
 		self._DebugLabel.Text = text
 		self._DebugLabel.TextColor3 = colorBy[text] or Color3.new(1,1,1)
-	end
-	
-	self.ResolvedStats = StatResolver.GetUnitStats(self)
-	self.Brain.Update(self, dt)
-
-	if self.ReloadPhase ~= ReloadPhase.None then
-		self:AdvanceReloadSequence()
-		return
-	end
-
-	self:TickReload(dt)
-	self:TickMovement(dt)
-	self:TickFire(dt)
-	self:TickMelee(dt)
-	self:TickClimb(dt)
-	self:TickHold(dt)
-end
-
-function UnitRuntime:TickFire(dt)
-	if self.Intent == Intent.Fire then
-		FireController.TickFire[self.Config.Class](self, dt)
-	end
-end
-
-function UnitRuntime:TickMovement(dt)
-	if self.Intent == Intent.Move then
-		MovementController:MoveUnit(self, dt)
-		if not self.Anims.Run.IsPlaying then
-			if self.Anims.StandIdle.IsPlaying then
-				self.Anims.StandIdle:Stop()
-			end
-			self.Anims.Run:Play()
-		end
-	else
-		MovementController:Face(self)
-	end
-end
-
-function UnitRuntime:TickReload(dt)
-	if self.Intent == Intent.Reload and self.ReloadPhase == ReloadPhase.None then
-		self.Anims.StandIdle:Stop()
-		self.Anims.Run:Stop()
-		self.Anims.CrouchEnter:Play()
-		self.ReloadPhase = ReloadPhase.CrouchEnter
-	end
-end
-
-function UnitRuntime:AdvanceReloadSequence()
-	if self.ReloadPhase == ReloadPhase.CrouchEnter then
-		if not self.Anims.CrouchEnter.IsPlaying then
-			self.Anims.CrouchReload:Play()
-			self.ReloadPhase = ReloadPhase.CrouchReload
-		end
-	elseif self.ReloadPhase == ReloadPhase.CrouchReload then
-		if not self.Anims.CrouchReload.IsPlaying then
-			self.Anims.CrouchExit:Play()
-			self.ReloadPhase = ReloadPhase.CrouchExit
-		end
-	elseif self.ReloadPhase == ReloadPhase.CrouchExit then
-		if not self.Anims.CrouchExit.IsPlaying then
-			self.AmmoInMag = self.MagSize
-			self.ReloadPhase = ReloadPhase.None
-			self.Anims.StandIdle:Play()
-		end
-	end
-end
-
-function UnitRuntime:TickMelee(dt)
-	if self.Intent == Intent.Melee then
-		if not self.Anims.Melee.IsPlaying then
-			self.Anims.Melee:Play()
-			self.Anims.Melee:GetMarkerReachedSignal("Strike"):Once(function()
-				self:Melee()
-			end)
-		end
-	end
-end
-
-function UnitRuntime:TickClimb(dt)
-	if self.Intent == Intent.Climb then
-		MovementController:ClimbUnit(self, dt)
-		if not self.Anims.Climb.IsPlaying then
-			self.Anims.Climb:Play()
-		end
-	end
-end
-
-function UnitRuntime:TickHold(dt)
-	if self.Intent == Intent.Hold then
-		self.Anims.Run:Stop()
-		self.Anims.StandIdle:Play()
 	end
 end
 

@@ -23,6 +23,7 @@ local INFANTRY_COVER_REDUCTION = 0.5
 local INFANTRY_AMBUSH_TIME = 3
 local INFANTRY_DAMAGE_REDUCTION = 0
 local INFANTRY_MAG_SIZE = 30
+local INFANTRY_RELOAD_TIME = 2
 
 ---------------------------------------------------------------------
 -- Infantry
@@ -45,6 +46,7 @@ UnitConfigs.Infantry = {
 	CoverReduction = INFANTRY_COVER_REDUCTION,
 	AmbushTime = INFANTRY_AMBUSH_TIME,
 	MagSize = INFANTRY_MAG_SIZE,
+	ReloadTime = INFANTRY_RELOAD_TIME,
 	Stealth = false,
 }
 
@@ -65,6 +67,7 @@ local SNIPER_CLIMB_SPEED = 6
 local SNIPER_COVER_REDUCTION = 0.5
 local SNIPER_AMBUSH_TIME = 3
 local SNIPER_DAMAGE_REDUCTION = 0
+local SNIPER_RELOAD_TIME = 2
 local SNIPER_MAG_SIZE = 6
 
 UnitConfigs.Sniper = {
@@ -84,6 +87,7 @@ UnitConfigs.Sniper = {
 	CoverReduction = SNIPER_COVER_REDUCTION,
 	AmbushTime = SNIPER_AMBUSH_TIME,
 	MagSize = SNIPER_MAG_SIZE,
+	ReloadTime = SNIPER_RELOAD_TIME,
 	Stealth = false,
 }
 

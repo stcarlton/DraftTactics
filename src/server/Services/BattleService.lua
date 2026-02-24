@@ -123,7 +123,9 @@ function BattleService:SpawnUnit(entry)
 		entry.TeamId .. "_" .. entry.TileId .. "_" .. tostring(entry.SpawnIndex),
 		model,
 		registry.Config,
-		registry.Brain
+		registry.Brain,
+		registry.FireController,
+		registry.AnimationController
 	)
 
 	-----------------------------------------------------------------
