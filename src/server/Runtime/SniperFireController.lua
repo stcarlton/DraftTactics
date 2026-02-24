@@ -10,32 +10,19 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Intent = require(ReplicatedStorage.Shared.Types.Intent)
 local SniperFirePhase = require(ReplicatedStorage.Shared.Types.SniperFirePhase)
 local StatResolver = require(ReplicatedStorage.Shared.Combat.StatResolver)
-local HealthBarStyle = require(ReplicatedStorage.Shared.Presentation.HealthBarStyle)
+local BattleVFX = require(script.Parent.BattleVFX)
 
 local SniperFireController = {}
 local AIM_WINDOW_TIME = 3.0
-local LASER_THICKNESS = 0.14
-local TARGET_AIM_HEIGHT_OFFSET = 4.0
-
-local function getAimTargetPosition(target)
-	if not target then
-		return nil
-	end
-
-	local model = target.Model
-	if model then
-		local head = model:FindFirstChild("Head", true)
-		if head and head:IsA("BasePart") then
-			return head.Position
-		end
-	end
-
-	if target.Root then
-		return target.Root.Position + Vector3.new(0, TARGET_AIM_HEIGHT_OFFSET, 0)
-	end
-
-	return nil
-end
+-- Intentionally exaggerated for distance-visibility/aliasing diagnosis.
+local LASER_THICKNESS = 0.4
+local SNIPER_TRACER_OPTIONS = {
+	Size = Vector3.new(0.28, 0.28, 56.0),
+	Color = Color3.fromRGB(255, 245, 210),
+	StartTransparency = 0,
+	EndTransparency = 1,
+	TravelTime = 0.08,
+}
 
 local function getState(unit)
 	local state = unit.SniperFireState
@@ -56,9 +43,7 @@ end
 
 local function destroyLaser(state)
 	if state.Laser then
-		if state.Laser.Model then
-			state.Laser.Model:Destroy()
-		end
+		BattleVFX.DestroyLaser(state.Laser)
 		state.Laser = nil
 	end
 end
@@ -68,76 +53,7 @@ local function getOrCreateLaser(state)
 		return state.Laser
 	end
 
-	local model = Instance.new("Model")
-	model.Name = "SniperAimLaser"
-
-	local startPart = Instance.new("Part")
-	startPart.Name = "Start"
-	startPart.Size = Vector3.new(0.1, 0.1, 0.1)
-	startPart.Transparency = 1
-	startPart.Anchored = true
-	startPart.CanCollide = false
-	startPart.CanQuery = false
-	startPart.CanTouch = false
-	startPart.Parent = model
-
-	local endPart = Instance.new("Part")
-	endPart.Name = "End"
-	endPart.Size = Vector3.new(0.1, 0.1, 0.1)
-	endPart.Transparency = 1
-	endPart.Anchored = true
-	endPart.CanCollide = false
-	endPart.CanQuery = false
-	endPart.CanTouch = false
-	endPart.Parent = model
-
-	local a0 = Instance.new("Attachment")
-	a0.Name = "A0"
-	a0.Parent = startPart
-
-	local a1 = Instance.new("Attachment")
-	a1.Name = "A1"
-	a1.Parent = endPart
-
-	local outerBeam = Instance.new("Beam")
-	outerBeam.Name = "OuterBeam"
-	outerBeam.Attachment0 = a0
-	outerBeam.Attachment1 = a1
-	outerBeam.FaceCamera = true
-	outerBeam.LightEmission = 1
-	outerBeam.Width0 = LASER_THICKNESS
-	outerBeam.Width1 = LASER_THICKNESS
-	outerBeam.Transparency = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, 0.35),
-		NumberSequenceKeypoint.new(1, 0.35),
-	})
-	outerBeam.Parent = startPart
-
-	local innerBeam = Instance.new("Beam")
-	innerBeam.Name = "InnerBeam"
-	innerBeam.Attachment0 = a0
-	innerBeam.Attachment1 = a1
-	innerBeam.FaceCamera = true
-	innerBeam.LightEmission = 1
-	innerBeam.Width0 = LASER_THICKNESS * 0.35
-	innerBeam.Width1 = LASER_THICKNESS * 0.35
-	innerBeam.Transparency = NumberSequence.new({
-		NumberSequenceKeypoint.new(0, 0.05),
-		NumberSequenceKeypoint.new(1, 0.05),
-	})
-	innerBeam.Color = ColorSequence.new(Color3.new(1, 1, 1))
-	innerBeam.Parent = startPart
-
-	model.Parent = workspace
-
-	state.Laser = {
-		Model = model,
-		StartPart = startPart,
-		EndPart = endPart,
-		OuterBeam = outerBeam,
-		InnerBeam = innerBeam,
-	}
-
+	state.Laser = BattleVFX.CreateSniperAimLaser()
 	return state.Laser
 end
 
@@ -154,7 +70,7 @@ local function updateLaser(state, unit, target)
 		origin = barrel.WorldPosition
 	end
 
-	local aimPos = getAimTargetPosition(target)
+	local aimPos = BattleVFX.GetAimTargetPosition(target)
 	if not aimPos then
 		destroyLaser(state)
 		return
@@ -167,13 +83,7 @@ local function updateLaser(state, unit, target)
 	end
 
 	local laser = getOrCreateLaser(state)
-	local teamColor =
-		HealthBarStyle.TeamColors[unit.Team]
-		or HealthBarStyle.TeamColors.Neutral
-
-	laser.StartPart.CFrame = CFrame.new(origin)
-	laser.EndPart.CFrame = CFrame.new(aimPos)
-	laser.OuterBeam.Color = ColorSequence.new(teamColor)
+	BattleVFX.UpdateSniperAimLaser(laser, origin, aimPos, unit.Team, LASER_THICKNESS)
 end
 
 local function clearAim(state)
@@ -277,70 +187,13 @@ function SniperFireController:Fire(unit, state)
 end
 
 function SniperFireController:DrawTracer(unit, enemy)
-	local handle = unit.Model:FindFirstChild("Handle")
-	local barrel = handle and handle:FindFirstChild("Barrel")
-	local target = getAimTargetPosition(enemy)
+	local target = BattleVFX.GetAimTargetPosition(enemy)
 	if not target then
 		return
 	end
 
-	local fireOrigin = unit.Root.Position
-	if barrel then
-		fireOrigin = barrel.WorldPosition
-
-		local muzzle = barrel:FindFirstChild("MuzzleFlash")
-		local light = barrel:FindFirstChild("PointLight")
-
-		if muzzle then
-			muzzle:Emit(12)
-		end
-
-		if light then
-			light.Enabled = true
-			task.delay(0.05, function()
-				if light then
-					light.Enabled = false
-				end
-			end)
-		end
-	end
-
-	local bullet = Instance.new("Part")
-	bullet.Size = Vector3.new(0.08, 0.08, 3.0)
-	bullet.Material = Enum.Material.Neon
-	bullet.Color = Color3.fromRGB(255, 170, 60)
-	bullet.Transparency = 0.15
-	bullet.CanCollide = false
-	bullet.Anchored = true
-	bullet.Parent = workspace
-
-	local dir = target - fireOrigin
-	local distance = dir.Magnitude
-	if distance <= 0 then
-		bullet:Destroy()
-		return
-	end
-
-	local direction = dir.Unit
-	bullet.CFrame = CFrame.new(fireOrigin, fireOrigin + direction)
-
-	local travelTime = 0.08
-	local startTime = time()
-
-	local RunService = game:GetService("RunService")
-	local conn
-	conn = RunService.Heartbeat:Connect(function()
-		local t = (time() - startTime) / travelTime
-		if t >= 1 then
-			bullet:Destroy()
-			conn:Disconnect()
-			return
-		end
-
-		local pos = fireOrigin + direction * distance * t
-		bullet.CFrame = CFrame.new(pos, pos + direction)
-		bullet.Transparency = 0.15 + 0.85 * t
-	end)
+	local fireOrigin = BattleVFX.EmitMuzzle(unit)
+	BattleVFX.DrawTracer(fireOrigin, target, SNIPER_TRACER_OPTIONS)
 end
 
 function SniperFireController:OnUnitDied(unit)
